@@ -1,3 +1,10 @@
+/*Simon Game
+ * ESC 120 Section 51 Group 4 Final Project
+ */
+
+
+
+
 // Include application, user and local libraries
 #include "SPI.h"
 #include <LCD_screen.h>
@@ -23,17 +30,9 @@ Screen_K35_SPI myScreen;
 #error Unknown screen
 #endif
 
-/*Simon Game
- * ESC 120 Group 4 Final Project
- */
-
 const int joyStickSel = 5;
 const int joyStickX = 2;
 const int joyStickY = 26;
-
-int joyStickSelState = 0;
-int joyStickXState, joyStickYState;
-
 //LED colors
 #define RGB_BLUE_LED 37 
 #define RGB_GREEN_LED 38
@@ -64,7 +63,13 @@ void setup() {
   fillArray();
   startScreen();
 }
-
+int joyStickSelState = 0;
+int joyStickXState, joyStickYState;
+int score = 0;
+int directionsArray[250];
+String directionsArrayString[250];
+boolean sequenceDisplayed = false;
+boolean startButton = false;
 int returnDirection(){
     joyStickXState = analogRead(joyStickX);
     joyStickYState = analogRead(joyStickY);
@@ -94,16 +99,88 @@ boolean joyStickCentered(){
 }
 
 void fillArray(){
-  int directionsArray[250];
-  for(int i=0; i<250; i++){
-    directionsArray[i] = random(1,4);
+  
+  int temp;
+  for(int i=0; i<250; i++){  
+    randomSeed(analogRead(A0));
+    temp = random(1,5);
+    directionsArray[i] = temp;
+    switch(temp){
+      case 1:
+        directionsArrayString[i] = "Up";
+        break;
+      case 2:
+        directionsArrayString[i] = "Down";
+        break;
+      case 3:
+        directionsArrayString[i] = "Left";
+        break;
+      case 4:
+        directionsArrayString[i] = "Right";
+        break;
+      default:
+        directionsArrayString[i] = "You should never see this";
+        break;
+    }
+  } 
+}
+
+void endGame(){
+  myScreen.clear();
+  myScreen.gText(0,0, "You Failed :(");
+  myScreen.gText(0, 20, "Your final score");
+  myScreen.gText(0, 40, "was: " + String(score));
+  myScreen.gText(0, 60, "Unplug this badboi");
+  myScreen.gText(0, 80, "To play again"); 
+  while(1){
+    
+  }
+}
+  
+void displaySequence(int level){
+  String direction;
+  for(int i=0; i<=level; i++){
+    direction = directionsArrayString[i];
+    myScreen.gText(0,0,direction);
+    myScreen.gText(0,120,"Score: " + String(score)); 
+    delay(500);
+    myScreen.clear();
   }
 }
 
-int score = 0;
+void playGame(){
+    myScreen.clear();
+    displaySequence(score);
+    while(joyStickCentered()){
+      myScreen.gText(0,0, "Enter the sequence");
+    }
+    if(enteringSequence(0)){
+      score++;
+      playGame();
+    }else{
+      endGame();
+    }
+    
+}
 
+boolean enteringSequence(int locationInSequence){
+  int currentDirection = returnDirection();
+  int requiredDirection = directionsArray[locationInSequence];
+  if(currentDirection == requiredDirection){
+    if(locationInSequence == score){
+      return true;
+    }else{
+      delay(200);
+      while(joyStickCentered()){
+      myScreen.gText(0,0, "Enter the sequence");
+    }
+    return enteringSequence((++locationInSequence));
+    }
+  } else if(currentDirection != requiredDirection){
+    return false;
+  }
+}
 
-boolean startButton = false;
 void loop() {
   Serial.println(startButton);
   if(digitalRead(button1) == 0){
@@ -111,12 +188,7 @@ void loop() {
     myScreen.clear();
   }
   if(startButton){ 
-    if(joyStickCentered() == true){
-      myScreen.gText(0,0,"Hello bois");
-    }else{
-      myScreen.clear();
-      myScreen.gText(0,0,"Goodbi bois"); 
-    }
+    playGame();
   }
   
 }
