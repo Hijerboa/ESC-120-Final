@@ -2,9 +2,6 @@
  * ESC 120 Section 51 Group 4 Final Project
  */
 
-
-
-
 // Include application, user and local libraries
 #include "SPI.h"
 #include <LCD_screen.h>
@@ -15,7 +12,6 @@
 #include <Terminal6e.h>
 #include <Terminal8e.h>
 Screen_HX8353E myScreen;
-
 
 // Screen selection
 #define HX8353E // HX8353E K35_SPI
@@ -30,39 +26,23 @@ Screen_K35_SPI myScreen;
 #error Unknown screen
 #endif
 
+//JoyStick pin defintions
 const int joyStickSel = 5;
 const int joyStickX = 2;
 const int joyStickY = 26;
-//LED colors
-#define RGB_BLUE_LED 37 
-#define RGB_GREEN_LED 38
-#define RGB_RED_LED 39
 
 //Buttons
 #define button1 33
 #define button2 32
 
+//Method Call to write the start Screen
 void startScreen(){
   myScreen.gText(30,0, "Simon Game");
   myScreen.gText(20, 50, "Press button 1");
   myScreen.gText(40, 70, "to start");
 }
 
-void setup() {
-  analogReadResolution(12);
-  pinMode(joyStickSel, INPUT_PULLUP);
-  Serial.begin(9600);
-  /*pinMode(RGB_BLUE_LED, OUTPUT);
-  pinMode(RGB_GREEN_LED, OUTPUT);
-  pinMode(RGB_RED_LED, OUTPUT);*/
-  pinMode(button1, INPUT);
-  pinMode(button2, INPUT);
-  myScreen.begin();
-  myScreen.setFontSize(1);
-  myScreen.setFontSolid(false);
-  fillArray();
-  startScreen();
-}
+//Set all initial variables
 int joyStickSelState = 0;
 int joyStickXState, joyStickYState;
 int score = 0;
@@ -70,6 +50,28 @@ int directionsArray[250];
 String directionsArrayString[250];
 boolean sequenceDisplayed = false;
 boolean startButton = false;
+
+//Initial setup Method
+void setup() {
+  //This is necessary for the screen to work properly. 
+  analogReadResolution(12);
+  //Begin Screen
+  Serial.begin(9600);
+  myScreen.begin();
+  //Set pin modes of buttons and the joystick to be input
+  pinMode(joyStickSel, INPUT_PULLUP);
+  pinMode(button1, INPUT);
+  pinMode(button2, INPUT);
+  //Set screen font properties
+  myScreen.setFontSize(1);
+  //Fill the Array
+  fillArray();
+  //Call the start Screen Method
+  startScreen();
+}
+
+//Method to return the direction the joystick is currently positioned in
+//Over 3800 or less than 300 in a given direction is considered to be pushed in that direction
 int returnDirection(){
     joyStickXState = analogRead(joyStickX);
     joyStickYState = analogRead(joyStickY);
@@ -88,6 +90,8 @@ int returnDirection(){
     }
 }
 
+//Returns true if joystick is centered, and false if not
+//Centered is considered to be between a value of 300 and 3800 in both the X and Y directions
 boolean joyStickCentered(){
   joyStickXState = analogRead(joyStickX);
   joyStickYState = analogRead(joyStickY);
@@ -97,9 +101,10 @@ boolean joyStickCentered(){
     return false;
   }
 }
-
+//Method to fill both the array containing the numerical values of the directions, as well as the String values
+// Iterates through all 250 values of the directionsArray and gives each a value of either 1, 2, 3, or 4
+// After a value has been assigned, it corresponds that to a string containing the direction, and then inputs that in to another array which can be used to display the sequence of directions required to be input
 void fillArray(){
-  
   int temp;
   for(int i=0; i<250; i++){  
     randomSeed(analogRead(A0));
@@ -125,6 +130,7 @@ void fillArray(){
   } 
 }
 
+//Called when the player fails the game, outputs the score and prompts the user to play again
 void endGame(){
   myScreen.clear();
   myScreen.gText(0,0, "You Failed :(");
@@ -136,7 +142,8 @@ void endGame(){
     
   }
 }
-  
+
+//Displays the sequence up until the given point, using the score as the variable to determine how far into the sequence to display
 void displaySequence(int level){
   String direction;
   for(int i=0; i<=level; i++){
@@ -148,6 +155,7 @@ void displaySequence(int level){
   }
 }
 
+//Is called after each round. First clears the sreen, then displays the sequence. Waits until the joystick moves then calls entering sequnce. If the sequence returns true, increase score and recursively call itself. If not, then call the endGame function
 void playGame(){
     myScreen.clear();
     displaySequence(score);
@@ -163,6 +171,9 @@ void playGame(){
     
 }
 
+//Finds the direction the joystick has been moved in, and the direction which is required at this point in the sequence. If it is correct, and the location is sequence is the same as the score returns true;
+//If it's correct, but not the end of the sequence then it recurisvely calls itself, however increases the variable which determines location.
+//If the joystick is in the incorrect posiiton, it returns false.
 boolean enteringSequence(int locationInSequence){
   int currentDirection = returnDirection();
   int requiredDirection = directionsArray[locationInSequence];
@@ -181,8 +192,8 @@ boolean enteringSequence(int locationInSequence){
   }
 }
 
+//Calls the playGame function the initial time once the start button has been pressed
 void loop() {
-  Serial.println(startButton);
   if(digitalRead(button1) == 0){
     startButton = true;
     myScreen.clear();
