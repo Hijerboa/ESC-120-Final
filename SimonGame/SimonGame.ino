@@ -35,12 +35,6 @@ const int joyStickY = 26;
 #define button1 33
 #define button2 32
 
-//Method Call to write the start Screen
-void startScreen(){
-  myScreen.gText(30,0, "Simon Game");
-  myScreen.gText(20, 50, "Press button 1");
-  myScreen.gText(40, 70, "to start");
-}
 
 //Set all initial variables
 int joyStickSelState = 0;
@@ -50,6 +44,7 @@ int directionsArray[250];
 String directionsArrayString[250];
 boolean sequenceDisplayed = false;
 boolean startButton = false;
+
 
 //Initial setup Method
 void setup() {
@@ -68,6 +63,13 @@ void setup() {
   fillArray();
   //Call the start Screen Method
   startScreen();
+}
+
+//Method Call to write the start Screen
+void startScreen(){
+  myScreen.gText(30,0, "Simon Game");
+  myScreen.gText(20, 50, "Press button 1");
+  myScreen.gText(40, 70, "to start");
 }
 
 //Method to return the direction the joystick is currently positioned in
@@ -133,11 +135,11 @@ void fillArray(){
 //Called when the player fails the game, outputs the score and prompts the user to play again
 void endGame(){
   myScreen.clear();
-  myScreen.gText(0,0, "You Failed :(");
+  myScreen.gText(0,0, "You Lost! :(");
   myScreen.gText(0, 20, "Your final score");
-  myScreen.gText(0, 40, "was: " + String(score));
-  myScreen.gText(0, 60, "Unplug this badboi");
-  myScreen.gText(0, 80, "To play again"); 
+  myScreen.gText(0, 40, "Was: " + String(score));
+  myScreen.gText(0, 60, "Unplug me to");
+  myScreen.gText(0, 80, "Play again"); 
   while(1){
     
   }
